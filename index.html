@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RiseBeyond Time Card</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+  h2 { margin-top: 25px; }
+  label { display: block; margin-top: 10px; }
+  input, button { margin-top: 5px; padding: 8px; border-radius: 4px; border: none; }
+  button { cursor: pointer; }
+
+  /* Work Timer Styling (Blue) */
+  .work-section {
+    background: #0074D9;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .work-section button {
+    background: #005fa3;
+    color: white;
+    margin-right: 5px;
+  }
+
+  /* Lunch Timer Styling (Orange) */
+  .lunch-section {
+    background: #FF851B;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  .lunch-section button {
+    background: #cc6a15;
+    color: white;
+    margin-right: 5px;
+  }
+
+  /* Progress Bar */
+  .progress-container {
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 10px;
+    height: 20px;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 100%;
+    transition: width 1s linear, background-color 0.5s ease;
+  }
+
+  /* Time Card Section */
+  .time-card {
+    background: #e6e6e6;
+    padding: 15px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<div class="time-card">
+  <h2>⏱ Time Card</h2>
+  <label>Arrival: <input type="time" id="arrival"></label>
+  <label>Lunch Start: <input type="time" id="lunchStart"></label>
+  <label>Lunch End: <input type="time" id="lunchEnd"></label>
+  <label>Home: <input type="time" id="home"></label>
+  <button onclick="calculateHours()">Calculate Total Hours</button>
+  <h3>Total Hours: <span id="total">0</span></h3>
+</div>
+
+<div class="work-section">
+  <h2>⏳ Work Timer</h2>
+  <button onclick="startWork()">Start Work</button>
+  <button onclick="pauseWork()">Pause</button>
+  <button onclick="resetWork()">Reset</button>
+  <button onclick="finishWork()">Finish Day</button>
+  <h3>Work Elapsed: <span id="workElapsed">0:00:00</span></h3>
+  
+  <!-- Work Progress Bar -->
+  <div class="progress-container">
+    <div id="workProgressBar" class="progress-bar"></div>
+  </div>
+</div>
+
+<div class="lunch-section">
+  <h2>🍴 Lunch Timer</h2>
+  <label>Lunch Duration (minutes): <input type="number" id="lunchDuration" value="30"></label>
+  <button onclick="startLunch()">Start Lunch</button>
+  <button onclick="pauseLunch()">Pause</button>
+  <button onclick="resetLunch()">Reset</button>
+  <h3>Lunch Remaining: <span id="lunchRemaining">0:30:00</span></h3>
+  
+  <!-- Lunch Progress Bar -->
+  <div class="progress-container">
+    <div id="progressBar" class="progress-bar"></div>
+  </div>
+</div>
+
+<audio id="ping" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<script>
+let workInterval, workStart, workElapsed = 0, workDurationMs;
+let lunchInterval, lunchEndTime, lunchDurationMs;
+
+// --- Work Timer ---
+function startWork() {
+  if (!workInterval) {
+    let arrival = document.getElementById("arrival").value;
+    let home = document.getElementById("home").value;
+    if (arrival && home) {
+      let arr = new Date("1970-01-01T"+arrival+":00");
+      let hom = new Date("1970-01-01T"+home+":00");
+      workDurationMs = (hom - arr);
+    } else {
+      workDurationMs = 8 * 3600 * 1000; // default 8 hours
+    }
+    workStart = Date.now() - workElapsed;
+    workInterval = setInterval(updateWork, 1000);
+    document.getElementById("workProgressBar").style.backgroundColor = "green";
+  }
+}
+function pauseWork() { clearInterval(workInterval); workInterval = null; }
+function resetWork() {
+  pauseWork(); workElapsed = 0;
+  document.getElementById("workElapsed").textContent = "0:00:00";
+  document.getElementById("workProgressBar").style.width = "100%";
+  document.getElementById("workProgressBar").style.backgroundColor = "green";
+}
+function updateWork() {
+  workElapsed = Date.now() - workStart;
+  document.getElementById("workElapsed").textContent = formatTime(workElapsed);
+  if (workDurationMs) {
+    let percent = (workElapsed / workDurationMs) * 100;
+    if (percent > 100) percent = 100;
+    document.getElementById("workProgressBar").style.width = percent + "%";
+    if (percent > 50 && percent <= 80) {
+      document.getElementById("workProgressBar").style.backgroundColor = "yellow";
+    } else if (percent > 80) {
+      document.getElementById("workProgressBar").style.backgroundColor = "red";
+    } else {
+      document.getElementById("workProgressBar").style.backgroundColor = "green";
+    }
+  }
+}
+function finishWork() {
+  pauseWork();
+  document.getElementById("ping").play();
+  alert("Work finished! Ping sound played.");
+}
+
+// --- Lunch Timer ---
+function startLunch() {
+  let durationMinutes = parseInt(document.getElementById("lunchDuration").value);
+  lunchDurationMs = durationMinutes * 60000;
+  if (!lunchInterval) {
+    lunchEndTime = Date.now() + lunchDurationMs;
+    lunchInterval = setInterval(updateLunch, 1000);
+    document.getElementById("progressBar").style.backgroundColor = "green";
+  }
+}
+function pauseLunch() { clearInterval(lunchInterval); lunchInterval = null; }
+function resetLunch() {
+  pauseLunch();
+  document.getElementById("lunchRemaining").textContent = "0:00:00";
+  document.getElementById("progressBar").style.width = "100%";
+  document.getElementById("progressBar").style.backgroundColor = "green";
+}
+function updateLunch() {
+  let remaining = lunchEndTime - Date.now();
+  if (remaining <= 0) {
+    resetLunch();
+    document.getElementById("ping").play();
+    alert("Lunch time is up! Ping sound played.");
+  } else {
+    document.getElementById("lunchRemaining").textContent = formatTime(remaining);
+    let percent = (remaining / lunchDurationMs) * 100;
+    document.getElementById("progressBar").style.width = percent + "%";
+    if (percent > 50) {
+      document.getElementById("progressBar").style.backgroundColor = "green";
+    } else if (percent > 20) {
+      document.getElementById("progressBar").style.backgroundColor = "yellow";
+    } else {
+      document.getElementById("progressBar").style.backgroundColor = "red";
+    }
+  }
+}
+
+// --- Helpers ---
+function formatTime(ms) {
+  let totalSeconds = Math.floor(ms/1000);
+  let hrs = Math.floor(totalSeconds/3600);
+  let mins = Math.floor((totalSeconds%3600)/60);
+  let secs = totalSeconds%60;
+  return `${hrs}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+}
+
+function calculateHours() {
+  let arrival = document.getElementById("arrival").value;
+  let lunchStart = document.getElementById("lunchStart").value;
+  let lunchEnd = document.getElementById("lunchEnd").value;
+  let home = document.getElementById("home").value;
+
+  if (arrival && home) {
+    let arr = new Date("1970-01-01T"+arrival+":00");
+    let hom = new Date("1970-01-01T"+home+":00");
+    let total = (hom-arr)/(1000*60*60);
+
+    if (lunchStart && lunchEnd) {
+      let lStart = new Date("1970-01-01T"+lunchStart+":00");
+      let lEnd = new Date("1970-01-01T"+lunchEnd+":00");
+      total -= (lEnd-lStart)/(1000*60*60);
+    }
+    document.getElementById("total").textContent = total.toFixed(2);
+  }
+}
+</script>
+</body>
+</html>
+
+<body>
