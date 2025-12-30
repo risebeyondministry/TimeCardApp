@@ -1,8 +1,11 @@
+Lunch App Code
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>RiseBeyond Time Card</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
   h2 { margin-top: 25px; }
@@ -57,12 +60,20 @@
     padding: 15px;
     border-radius: 8px;
   }
+
+  /* Mobile responsiveness */
+  @media (max-width: 600px) {
+    body { margin: 10px; font-size: 14px; }
+    input, button { width: 100%; margin-top: 8px; }
+    .work-section, .lunch-section, .time-card { padding: 10px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="time-card">
   <h2>⏱ Time Card</h2>
+  <label>Name: <input type="text" id="employeeName" placeholder="Enter your name"></label>
   <label>Arrival: <input type="time" id="arrival"></label>
   <label>Lunch Start: <input type="time" id="lunchStart"></label>
   <label>Lunch End: <input type="time" id="lunchEnd"></label>
@@ -88,11 +99,11 @@
 
 <div class="lunch-section">
   <h2>🍴 Lunch Timer</h2>
-  <label>Lunch Duration (minutes): <input type="number" id="lunchDuration" value="30"></label>
+  <label>Lunch Duration (minutes): <input type="number" id="lunchDuration" value="30" min="1"></label>
   <button onclick="startLunch()">Start Lunch</button>
   <button onclick="pauseLunch()">Pause</button>
   <button onclick="resetLunch()">Reset</button>
-  <h3>Lunch Remaining: <span id="lunchRemaining">0:30:00</span></h3>
+  <h3>Lunch Remaining: <span id="lunchRemaining"></span></h3>
   
   <!-- Lunch Progress Bar -->
   <div class="progress-container">
@@ -197,35 +208,29 @@ function formatTime(ms) {
   const hrs = Math.floor(totalSeconds / 3600);
   const mins = Math.floor((totalSeconds % 3600) / 60);
   const secs = totalSeconds % 60;
-  return `${hrs}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-}
-
-function calculateHours() {
-  const arrival = document.getElementById("arrival").value;
-  const lunchStart = document.getElementById("lunchStart").value;
-  const lunchEnd = document.getElementById("lunchEnd").value;
-  const home = document.getElementById("home").value;
-
-  if (arrival && home) {
-    const arr = new Date("1970-01-01T" + arrival + ":00");
-    const hom = new Date("1970-01-01T" + home + ":00");
-    let totalHours = (hom - arr) / (1000 * 60 * 60);
-    let lunchHours = 0;
-
-    if (lunchStart && lunchEnd) {
-      const lStart = new Date("1970-01-01T" + lunchStart + ":00");
-      const lEnd = new Date("1970-01-01T" + lunchEnd + ":00");
-      lunchHours = (lEnd - lStart) / (1000 * 60 * 60);
-      if (lunchHours < 0) lunchHours = 0; // guard against inverted times
-      totalHours -= lunchHours;
-    }
-
-    if (totalHours < 0) totalHours = 0; // guard against inverted times
-
-    document.getElementById("total").textContent = totalHours.toFixed(2);
+  return `${hrs}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'
     document.getElementById("lunchTotal").textContent = lunchHours.toFixed(2);
   }
 }
+
+// --- Initialization ---
+// Set Lunch Remaining to match the input value on load
+window.addEventListener('load', () => {
+  const durationMinutes = parseInt(document.getElementById("lunchDuration").value);
+  document.getElementById("lunchRemaining").textContent = formatTime(durationMinutes * 60000);
+});
+
+// Update Lunch Remaining preview when the duration input changes (if not currently counting down)
+document.getElementById("lunchDuration").addEventListener('input', () => {
+  if (!lunchInterval) {
+    const durationMinutes = parseInt(document.getElementById("lunchDuration").value);
+    document.getElementById("lunchRemaining").textContent = formatTime(durationMinutes * 60000);
+    document.getElementById("progressBar").style.width = "0%";
+    document.getElementById("progressBar").style.backgroundColor = "green";
+  }
+});
 </script>
 </body>
 </html>
+
+
