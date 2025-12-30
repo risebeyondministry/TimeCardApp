@@ -47,7 +47,7 @@
   }
   .progress-bar {
     height: 100%;
-    width: 100%;
+    width: 0%;
     transition: width 1s linear, background-color 0.5s ease;
   }
 
@@ -59,6 +59,8 @@
   }
 </style>
 </head>
+<body>
+
 <div class="time-card">
   <h2>⏱ Time Card</h2>
   <label>Arrival: <input type="time" id="arrival"></label>
@@ -67,6 +69,7 @@
   <label>Home: <input type="time" id="home"></label>
   <button onclick="calculateHours()">Calculate Total Hours</button>
   <h3>Total Hours: <span id="total">0</span></h3>
+  <h3>Lunch Duration: <span id="lunchTotal">0</span> hrs</h3>
 </div>
 
 <div class="work-section">
@@ -105,11 +108,11 @@ let lunchInterval, lunchEndTime, lunchDurationMs;
 // --- Work Timer ---
 function startWork() {
   if (!workInterval) {
-    let arrival = document.getElementById("arrival").value;
-    let home = document.getElementById("home").value;
+    const arrival = document.getElementById("arrival").value;
+    const home = document.getElementById("home").value;
     if (arrival && home) {
-      let arr = new Date("1970-01-01T"+arrival+":00");
-      let hom = new Date("1970-01-01T"+home+":00");
+      const arr = new Date("1970-01-01T" + arrival + ":00");
+      const hom = new Date("1970-01-01T" + home + ":00");
       workDurationMs = (hom - arr);
     } else {
       workDurationMs = 8 * 3600 * 1000; // default 8 hours
@@ -121,9 +124,10 @@ function startWork() {
 }
 function pauseWork() { clearInterval(workInterval); workInterval = null; }
 function resetWork() {
-  pauseWork(); workElapsed = 0;
+  pauseWork();
+  workElapsed = 0;
   document.getElementById("workElapsed").textContent = "0:00:00";
-  document.getElementById("workProgressBar").style.width = "100%";
+  document.getElementById("workProgressBar").style.width = "0%";
   document.getElementById("workProgressBar").style.backgroundColor = "green";
 }
 function updateWork() {
@@ -150,7 +154,7 @@ function finishWork() {
 
 // --- Lunch Timer ---
 function startLunch() {
-  let durationMinutes = parseInt(document.getElementById("lunchDuration").value);
+  const durationMinutes = parseInt(document.getElementById("lunchDuration").value);
   lunchDurationMs = durationMinutes * 60000;
   if (!lunchInterval) {
     lunchEndTime = Date.now() + lunchDurationMs;
@@ -161,19 +165,21 @@ function startLunch() {
 function pauseLunch() { clearInterval(lunchInterval); lunchInterval = null; }
 function resetLunch() {
   pauseLunch();
-  document.getElementById("lunchRemaining").textContent = "0:00:00";
-  document.getElementById("progressBar").style.width = "100%";
+  const durationMinutes = parseInt(document.getElementById("lunchDuration").value);
+  lunchDurationMs = durationMinutes * 60000;
+  document.getElementById("lunchRemaining").textContent = formatTime(lunchDurationMs);
+  document.getElementById("progressBar").style.width = "0%";
   document.getElementById("progressBar").style.backgroundColor = "green";
 }
 function updateLunch() {
-  let remaining = lunchEndTime - Date.now();
+  const remaining = lunchEndTime - Date.now();
   if (remaining <= 0) {
     resetLunch();
     document.getElementById("ping").play();
     alert("Lunch time is up! Ping sound played.");
   } else {
     document.getElementById("lunchRemaining").textContent = formatTime(remaining);
-    let percent = (remaining / lunchDurationMs) * 100;
+    const percent = (remaining / lunchDurationMs) * 100;
     document.getElementById("progressBar").style.width = percent + "%";
     if (percent > 50) {
       document.getElementById("progressBar").style.backgroundColor = "green";
@@ -187,34 +193,39 @@ function updateLunch() {
 
 // --- Helpers ---
 function formatTime(ms) {
-  let totalSeconds = Math.floor(ms/1000);
-  let hrs = Math.floor(totalSeconds/3600);
-  let mins = Math.floor((totalSeconds%3600)/60);
-  let secs = totalSeconds%60;
+  const totalSeconds = Math.floor(ms / 1000);
+  const hrs = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
   return `${hrs}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
 }
 
 function calculateHours() {
-  let arrival = document.getElementById("arrival").value;
-  let lunchStart = document.getElementById("lunchStart").value;
-  let lunchEnd = document.getElementById("lunchEnd").value;
-  let home = document.getElementById("home").value;
+  const arrival = document.getElementById("arrival").value;
+  const lunchStart = document.getElementById("lunchStart").value;
+  const lunchEnd = document.getElementById("lunchEnd").value;
+  const home = document.getElementById("home").value;
 
   if (arrival && home) {
-    let arr = new Date("1970-01-01T"+arrival+":00");
-    let hom = new Date("1970-01-01T"+home+":00");
-    let total = (hom-arr)/(1000*60*60);
+    const arr = new Date("1970-01-01T" + arrival + ":00");
+    const hom = new Date("1970-01-01T" + home + ":00");
+    let totalHours = (hom - arr) / (1000 * 60 * 60);
+    let lunchHours = 0;
 
     if (lunchStart && lunchEnd) {
-      let lStart = new Date("1970-01-01T"+lunchStart+":00");
-      let lEnd = new Date("1970-01-01T"+lunchEnd+":00");
-      total -= (lEnd-lStart)/(1000*60*60);
+      const lStart = new Date("1970-01-01T" + lunchStart + ":00");
+      const lEnd = new Date("1970-01-01T" + lunchEnd + ":00");
+      lunchHours = (lEnd - lStart) / (1000 * 60 * 60);
+      if (lunchHours < 0) lunchHours = 0; // guard against inverted times
+      totalHours -= lunchHours;
     }
-    document.getElementById("total").textContent = total.toFixed(2);
+
+    if (totalHours < 0) totalHours = 0; // guard against inverted times
+
+    document.getElementById("total").textContent = totalHours.toFixed(2);
+    document.getElementById("lunchTotal").textContent = lunchHours.toFixed(2);
   }
 }
 </script>
 </body>
 </html>
-
-<body>
