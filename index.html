@@ -10,66 +10,7 @@
   label { display: block; margin-top: 10px; }
   input, button { margin-top: 5px; padding: 8px; border-radius: 4px; border: none; }
   button { cursor: pointer; }
-
-  /* Work Timer Styling (Blue) */
-  .work-section {
-    background: #0074D9;
-    color: white;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-  }
-  .work-section button {
-    background: #005fa3;
-    color: white;
-    margin-right: 5px;
-  }
-
-  /* Lunch Timer Styling (Orange) */
-  .lunch-section {
-    background: #FF851B;
-    color: white;
-    padding: 15px;
-    border-radius: 8px;
-  }
-  .lunch-section button {
-    background: #cc6a15;
-    color: white;
-    margin-right: 5px;
-  }
-
-  /* Progress Bar */
-  .progress-container {
-    background: #fff;
-    border-radius: 6px;
-    overflow: hidden;
-    margin-top: 10px;
-    height: 20px;
-  }
-  .progress-bar {
-    height: 100%;
-    width: 0%;
-    transition: width 1s linear, background-color 0.5s ease;
-  }
-
-  /* Time Card Section */
-  .time-card {
-    background: #e6e6e6;
-    padding: 15px;
-    border-radius: 8px;
-  }
-
-  /* Mobile responsiveness */
-  @media (max-width: 600px) {
-    body { margin: 10px; font-size: 14px; }
-    input, button { width: 100%; margin-top: 8px; }
-    .work-section, .lunch-section, .time-card { padding: 10px; }
-  }
-</style>
-</head>
-<body>
-
-<div class="time-card">
+  .work-section { background: #0074D9; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; <div class="time-card">
   <h2>⏱ Time Card</h2>
   <label>Name: <input type="text" id="employeeName" placeholder="Enter your name"></label>
   <label>Arrival: <input type="time" id="arrival"></label>
@@ -88,11 +29,7 @@
   <button onclick="resetWork()">Reset</button>
   <button onclick="finishWork()">Finish Day</button>
   <h3>Work Elapsed: <span id="workElapsed">0:00:00</span></h3>
-  
-  <!-- Work Progress Bar -->
-  <div class="progress-container">
-    <div id="workProgressBar" class="progress-bar"></div>
-  </div>
+  <div class="progress-container"><div id="workProgressBar" class="progress-bar"></div></div>
 </div>
 
 <div class="lunch-section">
@@ -102,11 +39,7 @@
   <button onclick="pauseLunch()">Pause</button>
   <button onclick="resetLunch()">Reset</button>
   <h3>Lunch Remaining: <span id="lunchRemaining"></span></h3>
-  
-  <!-- Lunch Progress Bar -->
-  <div class="progress-container">
-    <div id="progressBar" class="progress-bar"></div>
-  </div>
+  <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
 </div>
 
 <audio id="ping" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
@@ -137,8 +70,7 @@ function startWork() {
 }
 function pauseWork() { clearInterval(workInterval); workInterval = null; }
 function resetWork() {
-  pauseWork();
-  workElapsed = 0;
+  pauseWork(); workElapsed = 0;
   document.getElementById("workElapsed").textContent = "0:00:00";
   document.getElementById("workProgressBar").style.width = "0%";
   document.getElementById("workProgressBar").style.backgroundColor = "green";
@@ -164,8 +96,8 @@ function finishWork() {
   document.getElementById("ping").play();
   alert("Work finished! Ping sound played.");
 }
-
-// --- Lunch Timer ---
+}
+  // --- Lunch Timer ---
 function startLunch() {
   const durationMinutes = parseInt(document.getElementById("lunchDuration").value);
   lunchDurationMs = durationMinutes * 60000;
@@ -207,10 +139,6 @@ function updateLunch() {
 
 // --- Helpers ---
 function formatTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hrs = Math.floor(totalSeconds / 3600);
-  const mins = Math.floor((totalSeconds % 3600
-       function formatTime(ms) {
   const totalSeconds = Math.floor(ms / 1000);
   const hrs = Math.floor(totalSeconds / 3600);
   const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -267,4 +195,3 @@ document.getElementById("lunchDuration").addEventListener('input', () => {
 </script>
 </body>
 </html>
-                    
